@@ -9,6 +9,7 @@ console.log('yiss');
 // all of this library is living in this variable = like import in react
 
 const express = require('express');
+
 // requires us to pull from .env or else it will default to open whatever port defined after ||
 require('dotenv').config();
 let weatherData = require ('./data/weather.json')
@@ -17,15 +18,15 @@ const cors = require('cors');
 // name of server:
 const app = express();
 
-// middle ware to share resources to share across internet
+// middleware to share resources to share across internet
 app.use(cors());
 
 // define port:
 const PORT = process.env.PORT || 3002;
 
 
-
 //  *** ENDPOINTS  **** order matters!!!
+
 // base endpoint
 // get is also an express method, server listening for get, 
 // app.get('endpoint', function?)
@@ -45,23 +46,20 @@ app.get('/howdy', (request, response)=>{
 
   response.status(200).send(`HOWDY! ${firstName} ${lastName}`);
 });
-
+// !!!!!!!!
 app.get('/weather',(request,response,next)=>{
-  
+  let cityNameQ = request.query.cityNameQ;
+    // let lat = request.query.lat;
+    // let lon = request.query.lon;
+
 try{
-  // queries
-    let searchQuery = request.query;
-    let lat = request.query.lat;
-    let lon = request.query.lon;
+    
+    // search thru data file to find cityNameQ
+    let cityNameData= weatherData.find(cityObj =>cityObj.city_name === cityNameQ);
 
-
-    // 
-    let cityNameData= weatherData.find(cityObj =>cityObj.city_name === searchQuery &&
-      cityObj.lat === lat && cityObj.lon === lon);
-
-    // creating new objects with search query
-    let dataSend = cityNameData.data.map(details => new Forecast(details));
-    response.status(200).send(dataSend);
+    // creating new objects with search query, brings all of the object 
+    let groomedData = cityNameData.data.map(day => new Forecast(day));
+    response.status(200).send(groomedData);
 
   }catch{
     next(error);
@@ -69,9 +67,9 @@ try{
 });
 
 class Forecast{
-  constructor (city){
-    this.date = city.date;
-    this.description = city.description;
+  constructor (dayObj){
+    this.date = dayObj.datetime;
+    this.description = dayObj.weather.description;
   };
 };
 
@@ -88,5 +86,4 @@ app.use((error, request, response, next)=>{
 })
 
 //  **** SERVER START ****
-
 app.listen(PORT, ()=> console.log(`running on port ${PORT}`));
