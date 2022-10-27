@@ -12,8 +12,8 @@ const express = require('express');
 
 // requires us to pull from .env or else it will default to open whatever port defined after ||
 require('dotenv').config();
-let weatherData = require ('./data/weather.json')
 const cors = require('cors');
+const axios = require('axios');
 
 // name of server:
 const app = express();
@@ -46,34 +46,50 @@ app.get('/howdy', (request, response)=>{
 
   response.status(200).send(`HOWDY! ${firstName} ${lastName}`);
 });
-// !!!!!!!!
-app.get('/weather',(request,response,next)=>{
-  let cityNameQ = request.query.cityNameQ;
-    // let lat = request.query.lat;
-    // let lon = request.query.lon;
 
-try{
-    
-    // search thru data file to find cityNameQ
-    let cityNameData= weatherData.find(cityObj =>cityObj.city_name === cityNameQ);
 
+app.get('/weather',async(request,response,next)=>{
+  try{
+  // let cityNameQ = request.query.cityNameQ;
+  console.log(request);
+    let lat = request.query.lat;
+    let lon = request.query.lon;
+
+    let weatherApiUrl= `https://api.weatherbit.io/v2.0/forecast/daily?key=${process.env.WEATHER_API_KEY}&lat=${lat}&lon=${lon}&days=6`;
+
+    let weatherData= await axios.get(weatherApiUrl);
+
+    // search thru data file to find weatherData
+  
     // creating new objects with search query, brings all of the object 
-    let groomedData = cityNameData.data.map(day => new Forecast(day));
+    let groomedData = weatherData.data.data.map(day => new Forecast(day));
     response.status(200).send(groomedData);
 
-  }catch{
+  }catch(error){
     next(error);
-  }; 
+  }
 });
 
 class Forecast{
   constructor (dayObj){
     this.date = dayObj.datetime;
     this.description = dayObj.weather.description;
-  };
-};
+  }
+}
+// app.get('/movies',async(request,response,next)=>{
+  
+//   let movieCity = request.query.movieCity
+//   let movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&&query=#${movieCity}`
+  
+//   let movieResults = await axios.get(movieUrl);
+// });
 
+// class Movies {
+//   constructor(movieObj){
+//     this.title = movieObject
 
+//   }
+// }
 //  '*'=catch all, catch anything MUST LIVE IN BOTTOM 
 app.get('*', (request, response)=> {
   response.status(404).send('this route doesnt exist');
