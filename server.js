@@ -1,44 +1,34 @@
-'use strict'
+'use strict';
 
-console.log('yiss');
-
-// *** REQUIRES ****
-// all of this library is living in this variable = like import in react
-const express = require('express');
 require('dotenv').config();
+const express = require('express');
 const cors = require('cors');
-const axios = require('axios');
+
 const app = express();
-const weatherMod= require('./modules/weather.js');
+const weather = require('./modules/weather.js');
 const movieMod= require('./modules/movie.js');
 
-// middleware to share resources to share across internet
 app.use(cors());
 
 const PORT = process.env.PORT || 3002;
 
-//  *** ENDPOINTS  **** order matters!!!
 
-// base endpoint, app.get('endpoint', function?)
-app.get('/', (request, response)=> {
-console.log('app get showing up');
-response.status(200).send('welcome to my server');
-});
-
-app.get('/weather', weatherMod);
-
+app.get('/weather', weatherHandler);
 app.get('/movies', movieMod);
 
-//  '*'=catch all, catch anything MUST LIVE IN BOTTOM 
-app.get('*', (request, response)=> {
-  response.status(404).send('this route doesnt exist');
-})
 
-//  *** ERROR HANDLING ***
-// express error handling, pass it to next 
+function weatherHandler(request, response) {
+  const { lat, lon } = request.query;
+  weather(lat, lon)
+  .then(summaries => response.send(summaries))
+  .catch((error) => {
+    console.error(error);
+    response.status(200).send('Sorry. Something went wrong!')
+  });
+} 
+
 app.use((error, request, response, next)=>{
   response.status(500).send(error.message);
 })
 
-//  **** SERVER START ****
-app.listen(PORT, ()=> console.log(`running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server up on ${process.env.PORT}`));
