@@ -12,12 +12,12 @@ async function movieMod(request,response,next){
 // *** data exist!!! and valid time stamp (cache[key].timestamp)
 // if cache key and cache timestap is less than time of requested timestamp, return cache if 1000(rightnow)- 500(cache timestamp) < (is less than) this time RETURN cache
 // if not get data from API
-if(cache[key] && (Date.now() - cache [key].timestamp < 1.21e+9)){
+if(cache[key] && (Date.now() - cache [key].timestamp < 1.08e+7)){
   response.status(200).send(cache[key].data);
 
 } else{ 
     
-    let movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${movieCity}&language=en`
+    let movieUrl = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${movieCity}&language=en&include_adult=false`
     let movieResults = await axios.get(movieUrl);
     let  groomedData = movieResults.data.results.map(movie =>new Movie(movie));
 
